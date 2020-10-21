@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">EasyReminder</string>
+    <string name="add_alarm_floating_button">Add Alarm Floating Button</string>
 </resources>
