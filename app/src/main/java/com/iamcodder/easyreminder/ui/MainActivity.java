@@ -8,17 +8,19 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
 
 import com.iamcodder.easyreminder.databinding.ActivityMainBinding;
+import com.iamcodder.easyreminder.interfaces.SendData;
 import com.iamcodder.easyreminder.services.AlertReceiver;
-import com.iamcodder.easyreminder.ui.fragment.TimePickerFragment;
+import com.iamcodder.easyreminder.ui.fragment.EnteringDataFragment;
 
 import java.util.Calendar;
 
-public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener {
+public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, SendData {
     private ActivityMainBinding binding;
 
     @Override
@@ -29,8 +31,10 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         setContentView(mView);
 
         binding.fab.setOnClickListener(v -> {
-            DialogFragment timePicker = new TimePickerFragment();
-            timePicker.show(getSupportFragmentManager(), "TimePickerFragment");
+//            DialogFragment timePicker = new TimePickerFragment();
+//            timePicker.show(getSupportFragmentManager(), "TimePickerFragment");
+            DialogFragment dataFragment = new EnteringDataFragment(this);
+            dataFragment.show(getSupportFragmentManager(), "DataFragment");
         });
 
         binding.cancelButton.setOnClickListener(v -> {
@@ -46,6 +50,11 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         tempCalendar.set(Calendar.SECOND, 0);
         startAlarm(tempCalendar);
         binding.text.setText(hourOfDay + ":" + minute);
+    }
+
+    @Override
+    public void sendText(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
     }
 
     private void startAlarm(Calendar c) {
@@ -65,4 +74,6 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         alarmManager.cancel(pendingIntent);
         binding.text.setText("Alarm canceled");
     }
+
+
 }
