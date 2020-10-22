@@ -12,13 +12,14 @@ public class AlertReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         int randomNumber = intent.getIntExtra("randomNumber", 0);
-        notify(context, randomNumber);
+        String notificationText = intent.getStringExtra("notificationText");
+        notify(context, randomNumber, notificationText);
 
     }
 
-    private void notify(Context context, int number) {
+    private void notify(Context context, int number, String notificationText) {
         NotificationHelper notificationHelper = new NotificationHelper(context);
-        NotificationCompat.Builder nb = notificationHelper.getChannelNotification("" + number);
+        NotificationCompat.Builder nb = notificationHelper.getChannelNotification(notificationText);
         notificationHelper.getManager().notify(1, nb.build());
     }
 

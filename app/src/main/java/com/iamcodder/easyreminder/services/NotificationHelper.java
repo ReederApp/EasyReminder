@@ -38,8 +38,8 @@ public class NotificationHelper extends ContextWrapper {
 
     public NotificationCompat.Builder getChannelNotification(String value) {
         return new NotificationCompat.Builder(getApplicationContext(), channelID)
-                .setContentTitle("Alarm!")
-                .setContentText("Intent number : " + value)
+                .setContentTitle("Unutma!!!")
+                .setContentText(value)
                 .setSmallIcon(R.drawable.ic_baseline_add_alarm_24);
     }
 }
