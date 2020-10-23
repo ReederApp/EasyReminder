@@ -8,6 +8,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,14 +48,18 @@ public class EnteringDataFragment extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        EditText editText = view.findViewById(R.id.edX);
+        EditText edxContent = view.findViewById(R.id.edxContent);
+        EditText edxTitle = view.findViewById(R.id.edxTitle);
         Button btnSave = view.findViewById(R.id.btnSub);
         btnSave.setOnClickListener(v -> {
-            String text = editText.getText().toString();
-            if (!text.isEmpty()) {
-                sendData.sendText(text);
+            String title = edxTitle.getText().toString();
+            String content = edxContent.getText().toString();
+            if (!title.isEmpty() && !content.isEmpty()) {
+                sendData.sendText(title, content);
                 if (getActivity() != null)
                     getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
+            } else {
+                Toast.makeText(this.getContext(), "Başlık ve metin boş olamaz", Toast.LENGTH_SHORT).show();
             }
         });
 

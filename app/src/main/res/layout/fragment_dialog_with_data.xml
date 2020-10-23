@@ -5,19 +5,18 @@
     android:layout_height="wrap_content"
     android:padding="12dp">
 
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/textView"
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/edxTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Message Enter"
-        android:textAlignment="center"
+        android:hint="Başlık Girin"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatEditText
-        android:id="@+id/edX"
+        android:id="@+id/edxContent"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
@@ -25,7 +24,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/edxTitle" />
 
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnSub"
@@ -35,6 +34,6 @@
         android:text="Kaydet"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/edX" />
+        app:layout_constraintTop_toBottomOf="@+id/edxContent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

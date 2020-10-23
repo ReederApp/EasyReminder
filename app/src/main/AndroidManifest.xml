@@ -22,7 +22,10 @@
             android:name=".services.AlertReceiver"
             android:enabled="true"
             android:exported="true" />
-        <service android:name=".services.NotificationServices" />
+        <service
+            android:name=".services.NotificationServices"
+            android:enabled="true"
+            android:exported="true" />
     </application>
 
 </manifest>

@@ -56,22 +56,22 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
     }
 
     @Override
-    public void sendText(String text) {
-        setAlarm(text);
+    public void sendText(String title, String content) {
+        setAlarm(title, content);
     }
 
-    private void setAlarm(String text) {
-        if (text != null) {
-            startAlarm(tempCalendar, text);
+    private void setAlarm(String title, String content) {
+        if (title != null && content != null && !title.isEmpty() && !content.isEmpty()) {
+            startAlarm(tempCalendar, title, content);
         }
     }
 
-
-    private void startAlarm(Calendar c, String notificationText) {
+    private void startAlarm(Calendar c, String title, String content) {
         int intentNumber = (int) (Math.random() * 1000);
         Intent intent = new Intent(this, AlertReceiver.class);
         intent.putExtra("intentNumber", intentNumber);
-        intent.putExtra("notificationText", notificationText);
+        intent.putExtra("notificationTitle", title);
+        intent.putExtra("notificationContent", content);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), intentNumber, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
@@ -85,6 +85,4 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         alarmManager.cancel(pendingIntent);
         binding.text.setText("Alarm canceled");
     }
-
-
 }
