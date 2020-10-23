@@ -68,11 +68,11 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
 
     private void startAlarm(Calendar c, String notificationText) {
-        int randomNumber = (int) (Math.random() * 1000);
+        int intentNumber = (int) (Math.random() * 1000);
         Intent intent = new Intent(this, AlertReceiver.class);
-        intent.putExtra("randomNumber", randomNumber);
+        intent.putExtra("intentNumber", intentNumber);
         intent.putExtra("notificationText", notificationText);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), randomNumber, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), intentNumber, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pendingIntent);

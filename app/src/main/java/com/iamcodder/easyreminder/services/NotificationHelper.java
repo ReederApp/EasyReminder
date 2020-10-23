@@ -36,10 +36,10 @@ public class NotificationHelper extends ContextWrapper {
         return mManager;
     }
 
-    public NotificationCompat.Builder getChannelNotification(String value) {
+    public NotificationCompat.Builder getChannelNotification(String contentText) {
         return new NotificationCompat.Builder(getApplicationContext(), channelID)
                 .setContentTitle("Unutma!!!")
-                .setContentText(value)
+                .setContentText(contentText)
                 .setSmallIcon(R.drawable.ic_baseline_add_alarm_24);
     }
 }

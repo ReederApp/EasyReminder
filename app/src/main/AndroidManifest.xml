@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.iamcodder.easyreminder">
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
@@ -21,7 +22,7 @@
             android:name=".services.AlertReceiver"
             android:enabled="true"
             android:exported="true" />
-
+        <service android:name=".services.NotificationServices" />
     </application>
 
 </manifest>
