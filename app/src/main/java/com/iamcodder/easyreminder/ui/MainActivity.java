@@ -69,13 +69,13 @@ public class MainActivity extends AppCompatActivity implements SendData {
     public void sendDate(int year, int month, int day) {
         tempCalendar = Calendar.getInstance();
         int currentYear = tempCalendar.get(Calendar.YEAR);
-        int currentMonth = tempCalendar.get(Calendar.MONTH);
+        int currentMonth = tempCalendar.get(Calendar.MONTH) + 1;
         int currentDay = tempCalendar.get(Calendar.DAY_OF_MONTH);
 
         if (year >= currentYear && month >= currentMonth && day >= currentDay) {
             //time picker aç
             tempCalendar.set(Calendar.YEAR, year);
-            tempCalendar.set(Calendar.MONTH, month);
+            tempCalendar.set(Calendar.MONTH, month - 1);
             tempCalendar.set(Calendar.DAY_OF_MONTH, day);
             DialogFragment timePicker = new TimePickerFragment(this);
             timePicker.show(getSupportFragmentManager(), "Time Picker");
@@ -115,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements SendData {
         if (alarmsAdapter != null) {
             InfoModel infoModel = new InfoModel(title, content, tempCalendar.get(Calendar.MINUTE), tempCalendar.get(Calendar.HOUR_OF_DAY), intentNumber);
             alarmsAdapter.addNewItem(infoModel);
-
             binding.recyclerView.scrollToPosition(alarmsAdapter.getItemCount() - 1);
         } else {
             setRecyclerData(repository.getSharedData(this.getApplicationContext()));
