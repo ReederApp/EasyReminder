@@ -22,6 +22,10 @@ public class SharedPrefHelper {
         return sharedPref.getSomeValue(sharedPreferences, key, classType);
     }
 
+    public void deleteValue(String key) {
+        sharedPref.deleteSomeValue(sharedPreferences, key);
+    }
+
     public void clearAllShared() {
         sharedPref.clearAllValue(sharedPreferences);
     }

@@ -49,6 +49,10 @@ class SharedPref {
         }
     }
 
+    public void deleteSomeValue(SharedPreferences pref, String key) {
+        pref.edit().remove(key).apply();
+    }
+
     public void clearAllValue(SharedPreferences pref) {
         pref.edit().clear().apply();
     }

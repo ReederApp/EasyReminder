@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.iamcodder.easyreminder.data.local.model.InfoModel;
+import com.iamcodder.easyreminder.data.local.repository.MainRepository;
 import com.iamcodder.easyreminder.data.local.sharedPref.SharedPrefHelper;
 import com.iamcodder.easyreminder.databinding.ActivityMainBinding;
 import com.iamcodder.easyreminder.interfaces.SendData;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
     private SharedPrefHelper sharedPrefHelper;
     private Calendar tempCalendar;
     private AlarmsAdapter alarmsAdapter;
+    private MainRepository repository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,36 +43,44 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         View mView = binding.getRoot();
         setContentView(mView);
         sharedPrefHelper = new SharedPrefHelper(this.getApplicationContext());
+        repository = new MainRepository(sharedPrefHelper);
 
         Intent intent = getIntent();
         InfoModel infoModel = intent.getParcelableExtra("infoModel");
         if (infoModel != null) {
             DialogFragment infoFragment = new InfoFragment(infoModel);
             infoFragment.show(getSupportFragmentManager(), "Info Fragment");
-
+            repository.deleteSharedData(infoModel);
         }
-        setRecyclerData(getSharedData());
+        setRecyclerData(repository.getSharedData(this.getApplicationContext()));
         binding.fab.setOnClickListener(v -> {
             DialogFragment timePicker = new TimePickerFragment();
             timePicker.show(getSupportFragmentManager(), "TimePickerFragment");
         });
 
     }
-
     @Override
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         tempCalendar = Calendar.getInstance();
-        tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-        tempCalendar.set(Calendar.MINUTE, minute);
-        tempCalendar.set(Calendar.SECOND, 0);
-        DialogFragment dataFragment = new EnteringDataFragment(this);
-        dataFragment.show(getSupportFragmentManager(), "DataFragment");
+
+        int currentHour = tempCalendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = tempCalendar.get(Calendar.MINUTE);
+
+        if (hourOfDay >= currentHour && minute >= currentMinute) {
+            tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            tempCalendar.set(Calendar.MINUTE, minute);
+            tempCalendar.set(Calendar.SECOND, 0);
+            DialogFragment dataFragment = new EnteringDataFragment(this);
+            dataFragment.show(getSupportFragmentManager(), "DataFragment");
+        } else {
+            Toast.makeText(this.getApplicationContext(), "İleri bir saat seçin", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void sendText(String title, String content) {
         int intentNumber = setAlarm(title, content);
-        setSharedData(intentNumber, title, content);
+        repository.setSharedData(intentNumber, title, content, tempCalendar);
         updateRecycler(intentNumber, title, content);
     }
 
@@ -81,10 +91,8 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
             binding.recyclerView.scrollToPosition(alarmsAdapter.getItemCount() - 1);
         } else {
-            setRecyclerData(getSharedData());
+            setRecyclerData(repository.getSharedData(this.getApplicationContext()));
         }
-
-
     }
 
     private void setRecyclerData(ArrayList list) {
@@ -94,38 +102,6 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
             binding.recyclerView.setAdapter(alarmsAdapter);
             binding.recyclerView.setLayoutManager(new LinearLayoutManager(this.getApplicationContext(), RecyclerView.VERTICAL, false));
         }
-    }
-
-    private ArrayList getSharedData() {
-        String alarms = (String) sharedPrefHelper.getValue("alarms", String.class);
-        String[] alarmsArray = alarms.split(",");
-        if (alarmsArray[0].equals("")) {
-            Toast.makeText(this.getApplicationContext(), "Alarm yok", Toast.LENGTH_SHORT).show();
-            return new ArrayList<>();
-        } else {
-            ArrayList<InfoModel> modelList = new ArrayList<>();
-            for (String s : alarmsArray) {
-                String title = (String) sharedPrefHelper.getValue(s + "title", String.class);
-                String content = (String) sharedPrefHelper.getValue(s + "content", String.class);
-                int hours = (int) sharedPrefHelper.getValue(s + "hours", Integer.class);
-                int minutes = (int) sharedPrefHelper.getValue(s + "minutes", Integer.class);
-                InfoModel tempModel = new InfoModel(title, content, minutes, hours, Integer.parseInt(s));
-                modelList.add(tempModel);
-            }
-            return modelList;
-        }
-    }
-
-    private void setSharedData(int intentNumber, String title, String content) {
-        String alarms = (String) sharedPrefHelper.getValue("alarms", String.class);
-        if (alarms != null && !alarms.isEmpty()) {
-            alarms = alarms + "," + intentNumber;
-        } else alarms = intentNumber + "";
-        sharedPrefHelper.setValue("alarms", alarms);
-        sharedPrefHelper.setValue(intentNumber + "title", title);
-        sharedPrefHelper.setValue(intentNumber + "content", content);
-        sharedPrefHelper.setValue(intentNumber + "hours", tempCalendar.get(Calendar.HOUR_OF_DAY));
-        sharedPrefHelper.setValue(intentNumber + "minutes", tempCalendar.get(Calendar.MINUTE));
     }
 
     private int setAlarm(String title, String content) {
