@@ -30,7 +30,6 @@ import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity implements SendData {
     private ActivityMainBinding binding;
-    private SharedPrefHelper sharedPrefHelper;
     private Calendar tempCalendar;
     private AlarmsAdapter alarmsAdapter;
     private MainRepository repository;
@@ -41,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements SendData {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         View mView = binding.getRoot();
         setContentView(mView);
-        sharedPrefHelper = new SharedPrefHelper(this.getApplicationContext());
+        SharedPrefHelper sharedPrefHelper = new SharedPrefHelper(this.getApplicationContext());
         repository = new MainRepository(sharedPrefHelper);
 
         Intent intent = getIntent();
@@ -58,29 +57,12 @@ public class MainActivity extends AppCompatActivity implements SendData {
         });
 
     }
-//    @Override
-//    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-//        tempCalendar = Calendar.getInstance();
-//
-//        int currentHour = tempCalendar.get(Calendar.HOUR_OF_DAY);
-//        int currentMinute = tempCalendar.get(Calendar.MINUTE);
-//
-//        if (hourOfDay >= currentHour && minute >= currentMinute) {
-//            tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-//            tempCalendar.set(Calendar.MINUTE, minute);
-//            tempCalendar.set(Calendar.SECOND, 0);
-//            DialogFragment dataFragment = new EnteringDataFragment(this);
-//            dataFragment.show(getSupportFragmentManager(), "DataFragment");
-//        } else {
-//            Toast.makeText(this.getApplicationContext(), "İleri bir saat seçin", Toast.LENGTH_SHORT).show();
-//        }
-//    }
 
     @Override
-    public void sendText(String title, String content) {
+    public void sendDialogData(String title, String content) {
         int intentNumber = setAlarm(title, content);
         repository.setSharedData(intentNumber, title, content, tempCalendar);
-        updateRecycler(intentNumber, title, content);
+        addNewItemRecycler(intentNumber, title, content);
     }
 
     @Override
@@ -113,14 +95,26 @@ public class MainActivity extends AppCompatActivity implements SendData {
             DialogFragment dataFragment = new EnteringDataFragment(this);
             dataFragment.show(getSupportFragmentManager(), "DataFragment");
         } else {
-            Toast.makeText(this, "Bugünün alarmı için en geç 23.59'a kadar saat seçilmektedir", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Bugünün alarmı için " + currentHour + "." + currentMinute + " ile 23.59'aralığında saat seçilmelidir", Toast.LENGTH_LONG).show();
         }
     }
 
-    private void updateRecycler(int intentNumber, String title, String content) {
+    @Override
+    public void sendAlarmInfo(int position, InfoModel infoModel) {
+        deleteItemOnRecycler(position, infoModel);
+    }
+
+    private void deleteItemOnRecycler(int position, InfoModel infoModel) {
+        alarmsAdapter.deleteItem(position);
+        int intentNumber = infoModel.getIntentNumber();
+        cancelAlarm(intentNumber);
+        repository.deleteSharedData(infoModel);
+    }
+
+    private void addNewItemRecycler(int intentNumber, String title, String content) {
         if (alarmsAdapter != null) {
             InfoModel infoModel = new InfoModel(title, content, tempCalendar.get(Calendar.MINUTE), tempCalendar.get(Calendar.HOUR_OF_DAY), intentNumber);
-            alarmsAdapter.updateUi(infoModel);
+            alarmsAdapter.addNewItem(infoModel);
 
             binding.recyclerView.scrollToPosition(alarmsAdapter.getItemCount() - 1);
         } else {
@@ -131,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements SendData {
     private void setRecyclerData(ArrayList list) {
         if (list.size() > 0) {
             ArrayList<InfoModel> tempList = (ArrayList<InfoModel>) list;
-            alarmsAdapter = new AlarmsAdapter(tempList);
+            alarmsAdapter = new AlarmsAdapter(tempList, this);
             binding.recyclerView.setAdapter(alarmsAdapter);
             binding.recyclerView.setLayoutManager(new LinearLayoutManager(this.getApplicationContext(), RecyclerView.VERTICAL, false));
         }
@@ -147,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements SendData {
         int intentNumber = (int) (Math.random() * 1000);
 
         Intent intent = new Intent(this, AlertReceiver.class);
-
         intent.putExtra("intentNumber", intentNumber);
         intent.putExtra("notificationTitle", title);
         intent.putExtra("notificationContent", content);
@@ -160,10 +153,10 @@ public class MainActivity extends AppCompatActivity implements SendData {
         return intentNumber;
     }
 
-    private void cancelAlarm() {
+    private void cancelAlarm(int intentNumber) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, AlertReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intentNumber, intent, 0);
         alarmManager.cancel(pendingIntent);
     }
 

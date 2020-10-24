@@ -55,7 +55,7 @@ public class EnteringDataFragment extends DialogFragment {
             String title = edxTitle.getText().toString();
             String content = edxContent.getText().toString();
             if (!title.isEmpty() && !content.isEmpty()) {
-                sendData.sendText(title, content);
+                sendData.sendDialogData(title, content);
                 if (getActivity() != null)
                     getActivity().getSupportFragmentManager().beginTransaction().remove(this).commit();
             } else {
