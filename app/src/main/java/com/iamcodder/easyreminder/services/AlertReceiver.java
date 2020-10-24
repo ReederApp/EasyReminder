@@ -3,23 +3,28 @@ package com.iamcodder.easyreminder.services;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
-import androidx.core.app.NotificationCompat;
+import com.iamcodder.easyreminder.data.local.model.InfoModel;
 
 
 public class AlertReceiver extends BroadcastReceiver {
-
     @Override
     public void onReceive(Context context, Intent intent) {
-        int randomNumber = intent.getIntExtra("randomNumber", 0);
-        notify(context, randomNumber);
+        int intentNumber = intent.getIntExtra("intentNumber", 0);
+        int calendarHours = intent.getIntExtra("calendarHours", 0);
+        int calendarMinute = intent.getIntExtra("calendarMinute", 0);
+        String notificationTitle = intent.getStringExtra("notificationTitle");
+        String notificationContent = intent.getStringExtra("notificationContent");
+        InfoModel infoModel = new InfoModel(notificationTitle, notificationContent, calendarMinute, calendarHours, intentNumber);
 
-    }
-
-    private void notify(Context context, int number) {
-        NotificationHelper notificationHelper = new NotificationHelper(context);
-        NotificationCompat.Builder nb = notificationHelper.getChannelNotification("" + number);
-        notificationHelper.getManager().notify(1, nb.build());
+        Intent newIntent = new Intent(context.getApplicationContext(), NotificationServices.class);
+        newIntent.putExtra("infoModel", infoModel);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(newIntent);
+        } else {
+            context.startService(newIntent);
+        }
     }
 
 
