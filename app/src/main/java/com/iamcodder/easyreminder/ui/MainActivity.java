@@ -8,26 +8,31 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TimePicker;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.iamcodder.easyreminder.data.local.model.InfoModel;
 import com.iamcodder.easyreminder.data.local.sharedPref.SharedPrefHelper;
 import com.iamcodder.easyreminder.databinding.ActivityMainBinding;
 import com.iamcodder.easyreminder.interfaces.SendData;
 import com.iamcodder.easyreminder.services.AlertReceiver;
+import com.iamcodder.easyreminder.ui.adapter.AlarmsAdapter;
 import com.iamcodder.easyreminder.ui.fragment.EnteringDataFragment;
 import com.iamcodder.easyreminder.ui.fragment.InfoFragment;
 import com.iamcodder.easyreminder.ui.fragment.TimePickerFragment;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, SendData {
     private ActivityMainBinding binding;
     private SharedPrefHelper sharedPrefHelper;
-
     private Calendar tempCalendar;
+    private AlarmsAdapter alarmsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         View mView = binding.getRoot();
         setContentView(mView);
+        sharedPrefHelper = new SharedPrefHelper(this.getApplicationContext());
 
         Intent intent = getIntent();
         InfoModel infoModel = intent.getParcelableExtra("infoModel");
@@ -43,15 +49,12 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
             infoFragment.show(getSupportFragmentManager(), "Info Fragment");
 
         }
-
+        setRecyclerData(getSharedData());
         binding.fab.setOnClickListener(v -> {
             DialogFragment timePicker = new TimePickerFragment();
             timePicker.show(getSupportFragmentManager(), "TimePickerFragment");
         });
 
-        binding.cancelButton.setOnClickListener(v -> {
-            cancelAlarm();
-        });
     }
 
     @Override
@@ -66,16 +69,72 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
 
     @Override
     public void sendText(String title, String content) {
-        setAlarm(title, content);
+        int intentNumber = setAlarm(title, content);
+        setSharedData(intentNumber, title, content);
+        updateRecycler(intentNumber, title, content);
     }
 
-    private void setAlarm(String title, String content) {
-        if (title != null && content != null && !title.isEmpty() && !content.isEmpty()) {
-            startAlarm(tempCalendar, title, content);
+    private void updateRecycler(int intentNumber, String title, String content) {
+        if (alarmsAdapter != null) {
+            InfoModel infoModel = new InfoModel(title, content, tempCalendar.get(Calendar.MINUTE), tempCalendar.get(Calendar.HOUR_OF_DAY), intentNumber);
+            alarmsAdapter.updateUi(infoModel);
+
+            binding.recyclerView.scrollToPosition(alarmsAdapter.getItemCount() - 1);
+        } else {
+            setRecyclerData(getSharedData());
+        }
+
+
+    }
+
+    private void setRecyclerData(ArrayList list) {
+        if (list.size() > 0) {
+            ArrayList<InfoModel> tempList = (ArrayList<InfoModel>) list;
+            alarmsAdapter = new AlarmsAdapter(tempList);
+            binding.recyclerView.setAdapter(alarmsAdapter);
+            binding.recyclerView.setLayoutManager(new LinearLayoutManager(this.getApplicationContext(), RecyclerView.VERTICAL, false));
         }
     }
 
-    private void startAlarm(Calendar c, String title, String content) {
+    private ArrayList getSharedData() {
+        String alarms = (String) sharedPrefHelper.getValue("alarms", String.class);
+        String[] alarmsArray = alarms.split(",");
+        if (alarmsArray[0].equals("")) {
+            Toast.makeText(this.getApplicationContext(), "Alarm yok", Toast.LENGTH_SHORT).show();
+            return new ArrayList<>();
+        } else {
+            ArrayList<InfoModel> modelList = new ArrayList<>();
+            for (String s : alarmsArray) {
+                String title = (String) sharedPrefHelper.getValue(s + "title", String.class);
+                String content = (String) sharedPrefHelper.getValue(s + "content", String.class);
+                int hours = (int) sharedPrefHelper.getValue(s + "hours", Integer.class);
+                int minutes = (int) sharedPrefHelper.getValue(s + "minutes", Integer.class);
+                InfoModel tempModel = new InfoModel(title, content, minutes, hours, Integer.parseInt(s));
+                modelList.add(tempModel);
+            }
+            return modelList;
+        }
+    }
+
+    private void setSharedData(int intentNumber, String title, String content) {
+        String alarms = (String) sharedPrefHelper.getValue("alarms", String.class);
+        if (alarms != null && !alarms.isEmpty()) {
+            alarms = alarms + "," + intentNumber;
+        } else alarms = intentNumber + "";
+        sharedPrefHelper.setValue("alarms", alarms);
+        sharedPrefHelper.setValue(intentNumber + "title", title);
+        sharedPrefHelper.setValue(intentNumber + "content", content);
+        sharedPrefHelper.setValue(intentNumber + "hours", tempCalendar.get(Calendar.HOUR_OF_DAY));
+        sharedPrefHelper.setValue(intentNumber + "minutes", tempCalendar.get(Calendar.MINUTE));
+    }
+
+    private int setAlarm(String title, String content) {
+        if (title != null && content != null && !title.isEmpty() && !content.isEmpty()) {
+            return startAlarm(tempCalendar, title, content);
+        } else return 0;
+    }
+
+    private int startAlarm(Calendar c, String title, String content) {
         int intentNumber = (int) (Math.random() * 1000);
 
         Intent intent = new Intent(this, AlertReceiver.class);
@@ -89,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         alarmManager.setExact(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pendingIntent);
+        return intentNumber;
     }
 
     private void cancelAlarm() {
@@ -96,7 +156,6 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         Intent intent = new Intent(this, AlertReceiver.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 1, intent, 0);
         alarmManager.cancel(pendingIntent);
-        binding.text.setText("Alarm canceled");
     }
 
 
