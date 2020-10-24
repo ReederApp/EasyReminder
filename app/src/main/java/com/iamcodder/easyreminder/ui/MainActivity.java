@@ -2,12 +2,10 @@ package com.iamcodder.easyreminder.ui;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +20,7 @@ import com.iamcodder.easyreminder.databinding.ActivityMainBinding;
 import com.iamcodder.easyreminder.interfaces.SendData;
 import com.iamcodder.easyreminder.services.AlertReceiver;
 import com.iamcodder.easyreminder.ui.adapter.AlarmsAdapter;
+import com.iamcodder.easyreminder.ui.fragment.DatePickerFragment;
 import com.iamcodder.easyreminder.ui.fragment.EnteringDataFragment;
 import com.iamcodder.easyreminder.ui.fragment.InfoFragment;
 import com.iamcodder.easyreminder.ui.fragment.TimePickerFragment;
@@ -29,7 +28,7 @@ import com.iamcodder.easyreminder.ui.fragment.TimePickerFragment;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class MainActivity extends AppCompatActivity implements TimePickerDialog.OnTimeSetListener, SendData {
+public class MainActivity extends AppCompatActivity implements SendData {
     private ActivityMainBinding binding;
     private SharedPrefHelper sharedPrefHelper;
     private Calendar tempCalendar;
@@ -54,34 +53,68 @@ public class MainActivity extends AppCompatActivity implements TimePickerDialog.
         }
         setRecyclerData(repository.getSharedData(this.getApplicationContext()));
         binding.fab.setOnClickListener(v -> {
-            DialogFragment timePicker = new TimePickerFragment();
-            timePicker.show(getSupportFragmentManager(), "TimePickerFragment");
+            DialogFragment datePicker = new DatePickerFragment(this);
+            datePicker.show(getSupportFragmentManager(), "TimePickerFragment");
         });
 
     }
-    @Override
-    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-        tempCalendar = Calendar.getInstance();
-
-        int currentHour = tempCalendar.get(Calendar.HOUR_OF_DAY);
-        int currentMinute = tempCalendar.get(Calendar.MINUTE);
-
-        if (hourOfDay >= currentHour && minute >= currentMinute) {
-            tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
-            tempCalendar.set(Calendar.MINUTE, minute);
-            tempCalendar.set(Calendar.SECOND, 0);
-            DialogFragment dataFragment = new EnteringDataFragment(this);
-            dataFragment.show(getSupportFragmentManager(), "DataFragment");
-        } else {
-            Toast.makeText(this.getApplicationContext(), "İleri bir saat seçin", Toast.LENGTH_SHORT).show();
-        }
-    }
+//    @Override
+//    public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+//        tempCalendar = Calendar.getInstance();
+//
+//        int currentHour = tempCalendar.get(Calendar.HOUR_OF_DAY);
+//        int currentMinute = tempCalendar.get(Calendar.MINUTE);
+//
+//        if (hourOfDay >= currentHour && minute >= currentMinute) {
+//            tempCalendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+//            tempCalendar.set(Calendar.MINUTE, minute);
+//            tempCalendar.set(Calendar.SECOND, 0);
+//            DialogFragment dataFragment = new EnteringDataFragment(this);
+//            dataFragment.show(getSupportFragmentManager(), "DataFragment");
+//        } else {
+//            Toast.makeText(this.getApplicationContext(), "İleri bir saat seçin", Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     @Override
     public void sendText(String title, String content) {
         int intentNumber = setAlarm(title, content);
         repository.setSharedData(intentNumber, title, content, tempCalendar);
         updateRecycler(intentNumber, title, content);
+    }
+
+    @Override
+    public void sendDate(int year, int month, int day) {
+        tempCalendar = Calendar.getInstance();
+        int currentYear = tempCalendar.get(Calendar.YEAR);
+        int currentMonth = tempCalendar.get(Calendar.MONTH);
+        int currentDay = tempCalendar.get(Calendar.DAY_OF_MONTH);
+
+        if (year >= currentYear && month >= currentMonth && day >= currentDay) {
+            //time picker aç
+            tempCalendar.set(Calendar.YEAR, year);
+            tempCalendar.set(Calendar.MONTH, month);
+            tempCalendar.set(Calendar.DAY_OF_MONTH, day);
+            DialogFragment timePicker = new TimePickerFragment(this);
+            timePicker.show(getSupportFragmentManager(), "Time Picker");
+        } else {
+            Toast.makeText(this, "İleri bir tarih seçiniz", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void sendTime(int hour, int minute) {
+        int currentHour = tempCalendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = tempCalendar.get(Calendar.MINUTE);
+        if (hour >= currentHour && minute >= currentMinute) {
+            tempCalendar.set(Calendar.HOUR_OF_DAY, currentHour);
+            tempCalendar.set(Calendar.MINUTE, minute);
+            tempCalendar.set(Calendar.SECOND, 0);
+            DialogFragment dataFragment = new EnteringDataFragment(this);
+            dataFragment.show(getSupportFragmentManager(), "DataFragment");
+        } else {
+            Toast.makeText(this, "Bugünün alarmı için en geç 23.59'a kadar saat seçilmektedir", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void updateRecycler(int intentNumber, String title, String content) {
